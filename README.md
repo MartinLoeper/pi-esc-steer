@@ -19,19 +19,14 @@ You keep stock queue UI from upstream. This package only changes the Esc → con
 ## Install
 
 ```bash
-# path (local)
-pi install /Users/timvdhoorn/Devops/Personal/Pi-config/pi-esc-steer
-
-# later, when published:
-# pi install git:github.com/<you>/pi-esc-steer
-# pi install npm:pi-esc-steer
+pi install npm:pi-esc-steer
 ```
 
 Recommended with upstream queue UI:
 
 ```bash
 pi install git:github.com/tmustier/pi-queue-steer
-pi install /path/to/pi-esc-steer
+pi install npm:pi-esc-steer
 ```
 
 Then `/reload` or new session.
@@ -61,4 +56,3 @@ Tested as a companion to Pi 0.80.x + `@tmustier/pi-queue-steer`.
 ## Licence
 
 MIT
-EOF

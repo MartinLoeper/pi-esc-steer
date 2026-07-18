@@ -1,6 +1,6 @@
 {
   "name": "pi-esc-steer",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "description": "Claude Code-like Esc while the agent runs: abort and immediately continue with the next queued steer/follow-up instead of only pausing or dumping the queue into the editor.",
   "author": "Tim van der Hoorn",
