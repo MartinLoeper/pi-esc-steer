@@ -12,9 +12,8 @@ instead of only pausing the queue, or dumping steers back into the editor for yo
 | Setup | Default Esc | With `pi-esc-steer` |
 | --- | --- | --- |
 | Native Pi | Restores queued text into the editor, aborts | Abort + **auto-submit** restored text |
-| [`pi-queue-steer`](https://github.com/tmustier/pi-queue-steer) | Aborts and **pauses** lanes (Enter resumes) | Abort + **auto-resume** (same as empty Enter) |
 
-You keep stock queue UI from upstream. This package only changes the Esc → continue path.
+This fork no longer supports [`pi-queue-steer`](https://github.com/tmustier/pi-queue-steer)'s empty-Enter resume: it would require wrapping the editor component, which stacks with other editor wrappers (e.g. statusline boxes).
 
 ## Install
 
@@ -33,11 +32,10 @@ Then `/reload` or new session.
 
 ## Behaviour
 
-- Intercepts **Esc / `app.interrupt`** only while the agent is **not idle**
-- Always **passes the key through** (does not steal autocomplete cancel, idle double-Esc, etc.)
-- On **`agent_settled`** after that abort, synthesizes one **submit** (`tui.input.submit`):
-  - **pi-queue-steer:** empty composer → resume paused lane / `dispatchFromIdle`
-  - **native:** editor already holds restored queue text → send it as the next user turn
+- Listens to raw terminal input for **Esc** only while the agent is **not idle**
+- Always **passes the key through** (never consumes it), so Pi restores the queue and aborts as usual
+- On **`agent_settled`** after that abort, sends the restored editor text as the next user turn
+- Does not wrap or replace the editor component
 
 ## Non-goals
 
