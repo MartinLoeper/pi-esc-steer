@@ -34,6 +34,8 @@ export default function escSteerExtension(pi: ExtensionAPI) {
 	/** After an abort Esc, fire one empty/restored submit once the run has settled. */
 	let continueAfterAbort = false;
 	let injectSubmit: (() => void) | undefined;
+	/** Install once per session; re-wrapping stacks editors when others wrap us without our marker. */
+	let installed = false;
 
 	const armContinueAfterAbort = (): void => {
 		continueAfterAbort = true;
@@ -67,7 +69,7 @@ export default function escSteerExtension(pi: ExtensionAPI) {
 	};
 
 	const installEditor = (ctx: ExtensionContext): void => {
-		if (ctx.mode !== "tui") return;
+		if (ctx.mode !== "tui" || installed) return;
 
 		const previousFactory = ctx.ui.getEditorComponent();
 		const features = editorFeatures(previousFactory);
@@ -102,7 +104,7 @@ export default function escSteerExtension(pi: ExtensionAPI) {
 				handleInput("\r");
 			};
 
-			editor.handleInput = (data: string): void => {
+			const wrappedHandleInput = (data: string): void => {
 				const isInterrupt =
 					typeof keybindings.matches === "function"
 						? keybindings.matches(data, "app.interrupt")
@@ -119,9 +121,22 @@ export default function escSteerExtension(pi: ExtensionAPI) {
 				handleInput(data);
 			};
 
-			return editor;
+			// Return a proxy instead of assigning editor.handleInput: other extensions
+			// (e.g. pi-better-background-tasks) wrap the editor in a Proxy whose set
+			// trap writes onto the inner editor, which makes handleInput recurse forever.
+			return new Proxy(editor, {
+				get(target, prop) {
+					if (prop === "handleInput") return wrappedHandleInput;
+					const value = Reflect.get(target, prop);
+					return typeof value === "function" ? value.bind(target) : value;
+				},
+				set(target, prop, value) {
+					return Reflect.set(target, prop, value);
+				},
+			});
 		}) as ComposedEditorFactory;
 		factory[EDITOR_FEATURES] = new Set([...features, FEATURE]);
+		installed = true;
 		ctx.ui.setEditorComponent(factory);
 	};
 
@@ -169,6 +184,7 @@ export default function escSteerExtension(pi: ExtensionAPI) {
 		editorInstallTimer = undefined;
 		activeContext = undefined;
 		injectSubmit = undefined;
+		installed = false;
 		continueAfterAbort = false;
 	});
 }
